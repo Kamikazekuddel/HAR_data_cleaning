@@ -1,4 +1,4 @@
-#Human Activity Recognition Using Smartphones Dataset Data Cleaning
+# Human Activity Recognition Using Smartphones Dataset Data Cleaning
 
 The run_analysis.R script downloads the data and addresses the follwoing points from the assignment
 
