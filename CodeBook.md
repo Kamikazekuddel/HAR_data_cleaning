@@ -1,85 +1,40 @@
 #CodeBook
 
 ## General Structure
-The general structure of the cleaned data consists of
-three tables.
+The cleaned data consists of
+tables the table averageObservations, which has
+180 observations and 68 features.
 
-* observations
-* measurement_details
-* transformation_details
+### observations features
 
-The logic behind this spilt is,that our data is obtained from raw Inertial Signals data.
-This data is transformed in various ways and then itis aggregated to obtain our observations.
-This means that we can make serveral observations from one original raw measurement!
+The first two features of every observation are
 
-This is the content of the observations table. This table specifies
-specifies the original measurement and the performed transformation
-and shows the resulting aggregate variables
+**subject: ** Id that identifies the test subject
 
-The measurement_details table contain variables with more details on a specific
-measurement, i.e. who the subject was and what the activity was.
+**activity: ** Activity the subject was performing during the measurements
 
-The transformation_details table contain variables with more details on the specific
-transformations done to the raw data to create our observations. Transformations
-can be as simple as selecteing specific raw data for aggregation but
-they can involve more complicated steps like FFTs and low pass filters.
+All the other features correspond to the averages across measurements for a
+specific combination of subject and activity. Instead of liting all of them
+individually, the logic behind their names will be described.
+The names have the sructure
+**(t|f)(Body|Gravity).(mean|std)...(X|Y|Z|Mag)** where the items in braces
+denote alternatives for that part of the word.
 
-### observations fields
-**measurement_id: ** Unique ID identifiying the measurement here and
-in the transfromation_details table
+The meaning of the individual parts (in order) is
 
-**transformation_id: **Unique ID of a specific transformation
+**domain: ** Indicates whether the quantity was obtained in frequency (f) or 
+time (t) domain
 
-**mean: ** Mean of the raw data after the transformation
+**origin: ** Idicates whether the signal originates from the subjects body
+or simply from gravity
 
-**std: ** Standarddeviation of the raw data after the transformation
+**aggregate: ** Denotes the aggregate that was calculated from the original raw
+data
 
-### measurement_details fields
-**subject: ** Unique ID that identifies the subjects of the measurement.
+**direction: ** Direction of the measurement (X,Y or Z) or the overall magnitude
+of the measurement (Mag). It is important to retain this information seperately
+because there is no relationship between X, Y, Z and Mag after aggregating the data.
 
-**activity: ** Activity during this measurement.
-
-**measurement_id: ** Unique ID identifiying the measurement here and
-in the transfromation_details table
-
-
-### transformation_details fields
-
-**transformation_id: **Unique ID of a specific transformation
-
-**transformation_domain: **Contains the values
-
-* frequency
-* time
-
-indicating wheather the transformation was done in time or frequency domain.
-
-**transformation_type: **Contains the values
-
-* Body
-* Gravity
-
-indicating wheather the type of data.
-
-**transformation_quantity: **Contains the values
-
-* Acc
-* AccJerk
-* Gyro
-* GyroJerk
-
-indicating which quantity was measured.
-
-**transformation_direction: **Contains the values
-
-* X
-* Y
-* Z
-* Mag - Magnitude, i.e. value along its own direction
-
-indicating which direction was measured. It is important to keep the
-magnitude as a seperate observation becaues aggregates of the magnitude
-are not the same as magnitudes of aggregates.
 
 ## Data Cleaning Details
 In order to arrive at the tidy tables the following steps where performed
@@ -90,12 +45,6 @@ selected from the frame afterwards. Particularly FreqMean is excluded in this wa
 2. y train/test and subjects train/test where read in and the activities (y values) where converted
 into factors with the names from the activity_labels.txt file to increase readability
 3. The train data (X,y, subjects) and the test data where concatenated column wise
-4. Train and test data where concatinated row wise and a unique measurement_id for each row was created
-5. measurement_details was created as the selection of subject, activity and measurement_id
-6. observations was created by first deselecting subject and activity and gathering all mean and std variables
-7. The different gathered mean and std column names are split into seperate columns unsing extract. These columns correspond to
-different modular components of the performed transformations.
-8. To increase readability some variables and columns are renamed and all character values are turned into factors
-9. All transformation specific columns are extracted into a seperate table (transformation_detail) and given a unique id
-10. The new transformation_detail table is rejoined with observations to add the newly generated id. The other
-transformation specific columns are then deselected from observations.
+4. Train and test data where concatinated row wise and the column names where cleaned up
+5. The data was grouped according to subject and activity and the averages of all features
+where calculated.

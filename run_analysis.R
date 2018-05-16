@@ -25,6 +25,20 @@ activityNames <- read.csv(activityNamePath,
                           sep = ' ',stringsAsFactors = FALSE)
 
 require(dplyr)
+
+
+#The points in the task are done out of order. When reading in the X data features
+# belonging to mean and std are select (point 2). When reading in the y data
+# activities are converted into a more readable factor representation (point 3).
+# Afterwards train and test data is merged (point 1). Appropriately labeling the
+# variable names is for subjects and activities is done when reading the data
+# from the files. For the measurement features the names are already descriptive
+# and except for some slight cleanup no changes are performed (point 4).
+# Finally the measurements are averaged across subject and activity and the tidy
+# output file is created (point 5)
+
+
+# 2. Extracts only the measurements on the mean and standard deviation for each measurement.
 xtrain <-read.fwf(getDataPath('X','train')
                   ,header=FALSE
                   ,widths = rep(16,numfeatures)
@@ -39,6 +53,7 @@ xtest <-read.fwf(getDataPath('X','test')
   as_tibble() %>%
   select(contains(match = 'mean.',ignore.case=FALSE),contains('std.'))
 
+#3. Uses descriptive activity names to name the activities in the data set
 ytrain <-read.csv(getDataPath('y','train')
                   ,header=FALSE
                   ,col.names = 'activity') %>%
@@ -53,49 +68,24 @@ ytest<-read.csv(getDataPath('y','test')
 subjecttrain<-read.csv(getDataPath('subject','train'),header=FALSE,col.names = 'subject') %>% as_tibble()
 subjecttest<-read.csv(getDataPath('subject','test'),header=FALSE,col.names = 'subject') %>% as_tibble()
 
+# 1. Merges the training and the test sets to create one data set.
 train<-bind_cols(subjecttrain,ytrain,xtrain)
 test<-bind_cols(subjecttest,ytest,xtest)
 
-total<-bind_rows(train,test) %>% mutate(measurement_id = row_number())
+total<-bind_rows(train,test)
 
+#4. Appropriately labels the data set with descriptive variable names.
 #small name changes in the column names
 names(total)<-names(total) %>%
 {gsub('BodyBody','Body',.)} %>% #Cleanup typo in the data
 {gsub('Mag(.*)','\\1\\.Mag',.)} #Allign Mag with X,Y,Z representation
 
-#Data cleaning 
-require(tidyr)
+#5. From the data set in step 4, creates a second, independent tidy data set
+#with the average of each variable for each activity and each subject.
+averageObservations <- total %>%
+  group_by(subject,activity) %>%
+  summarise_all(mean)
 
-extractRegexp<-"(t|f)(Body|Gravity)(Acc|AccJerk|Gyro|GyroJerk)\\.(mean|std)\\.{3}(X|Y|Z|Mag)"
 
-measurement_details <- total %>%
-  select(subject,activity,measurement_id)
-
-observations <- total %>% 
-  select(-subject,-activity) %>% 
-  gather(measurement
-         ,value
-         ,-c("measurement_id")) %>%
-  extract(measurement,
-          c("transformation_domain","transformation_type","transformation_quantity","statistic","transformation_direction"),
-          regex = extractRegexp) %>%
-  mutate(transformation_domain = if_else(transformation_domain == "f","frequency","time"),
-         transformation_domain = factor(transformation_domain),
-         transformation_type = factor(transformation_type),
-         transformation_quantity = factor(transformation_quantity),
-         transformation_direction = factor(transformation_direction)) %>%
-  spread(statistic,value)
-
-#extract unique transformation details in rejoin observations with the corresponding id
-transformation_details <- observations %>% 
-  select(-measurement_id,-mean,-std) %>% 
-  unique() %>%
-  mutate(transformation_id = row_number()) %>%
-  select(transformation_id,transformation_domain,transformation_type,transformation_quantity,transformation_direction)
-
-observations <- inner_join(observations,transformation_details) %>%
-  select(measurement_id,transformation_id,mean,std)
-
-observations %>% write.table(file = "observations.txt",row.name = FALSE)
-measurement_details %>% write.table(file = "measurement_details.txt",row.name = FALSE)
-transformation_details %>% write.table(file = "transformation_details.txt",row.name = FALSE)
+averageObservations %>% write.table(file = "averageObservations.txt",
+                                    row.name = FALSE)

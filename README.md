@@ -8,14 +8,14 @@ The run_analysis.R script downloads the data and addresses the follwoing points 
 4. Appropriately labels the data set with descriptive variable names.
 5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
 
-One should note that point 4. is mostly done in connection with point five.
-Furthermore the process of tidying the dataset splits it into three differrent tables
-such that each table contains one observational unit. Therefore the run_analysis.R
-script outputs three .txt files
+The points in the task are done out of order. When reading in the X data features
+belonging to mean and std are select (point 2). When reading in the y data
+activities are converted into a more readable factor representation (point 3).
+Afterwards train and test data is merged (point 1). Appropriately labeling the
+variable names is for subjects and activities is done when reading the data
+from the files. For the measurement features the names are already descriptive
+and except for some slight cleanup no changes are performed (point 4).
+Finally the measurements are averaged across subject and activity and the tidy
+output file is created (point 5).
 
-* observations.txt
-* measurement_details.txt
-* transformation_details.txt
-
-The first of these files was submitted for the assignment but the other two also contain important reference data.
-To learn details about these tables please refer to the CodeBook.
+The script generates a file called averageObservations.txt as it's output.
